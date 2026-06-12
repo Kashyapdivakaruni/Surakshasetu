@@ -1,0 +1,267 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String            @id @default(cuid())
+  fullName        String
+  email           String            @unique
+  phone           String
+  passwordHash    String
+  role            String            // CITIZEN, EMS, HOSPITAL, POLICE
+  profilePhoto    String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  citizenProfile  CitizenProfile?
+  hospitalProfile HospitalProfile?
+  uploadedFiles   UploadedFile[]
+}
+
+model CitizenProfile {
+  id                    String        @id @default(cuid())
+  userId                String        @unique
+  user                  User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  age                   Int?
+  gender                String?
+  bloodGroup            String?
+  address               String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  emergencyContactEmail String?
+  organDonorStatus      Boolean       @default(false)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  medicalInfo           MedicalInfo?
+  vehicles              Vehicle[]
+  passengers            Passenger[]
+  qrCodes               QRCode[]
+  accidentCases         AccidentCase[]
+}
+
+model MedicalInfo {
+  id                  String         @id @default(cuid())
+  citizenId           String         @unique
+  citizen             CitizenProfile @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  previousConditions  String?
+  allergies           String?
+  currentMedications  String?
+  disabilities        String?
+  notes               String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+}
+
+model Vehicle {
+  id                String         @id @default(cuid())
+  citizenId         String
+  citizen           CitizenProfile @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  vehicleNumber     String
+  vehicleType       String
+  vehicleColor      String
+  registrationState String
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  qrCodes           QRCode[]
+  accidentCases     AccidentCase[]
+}
+
+model Passenger {
+  id                    String         @id @default(cuid())
+  citizenId             String
+  citizen               CitizenProfile @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  name                  String
+  age                   Int
+  gender                String
+  relationship          String
+  photo                 String?
+  bloodGroup            String?
+  healthConditions      String?
+  allergies             String?
+  emergencyContactName  String?
+  emergencyContactPhone String?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+}
+
+model QRCode {
+  id          String         @id @default(cuid())
+  citizenId   String
+  citizen     CitizenProfile @relation(fields: [citizenId], references: [id], onDelete: Cascade)
+  vehicleId   String
+  vehicle     Vehicle        @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  qrToken     String         @unique
+  qrImageData String?
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  expiresAt   DateTime?
+  regeneratedAt DateTime?
+  revokedAt   DateTime?
+
+  accidentCases AccidentCase[]
+}
+
+model AccidentCase {
+  id                  String         @id @default(cuid())
+  qrCodeId            String?
+  qrCode              QRCode?         @relation(fields: [qrCodeId], references: [id])
+  citizenId           String?
+  citizen             CitizenProfile? @relation(fields: [citizenId], references: [id])
+  vehicleId           String?
+  vehicle             Vehicle?        @relation(fields: [vehicleId], references: [id])
+  scannedByEmsId      String?
+  assignedHospitalId  String?
+  accidentLatitude    Float?
+  accidentLongitude   Float?
+  accidentAddress     String?
+  severityLevel       String?        // LOW, MEDIUM, HIGH, CRITICAL
+  identityStatus      String?        // VERIFIED, UNVERIFIED, PARTIAL
+  status              String         @default("ACTIVE") // ACTIVE, HOSPITAL_NOTIFIED, EN_ROUTE, ADMITTED, UNDER_TREATMENT, STABLE, CRITICAL, CLOSED
+  ambulanceEtaMinutes Int?
+  trackingToken       String?        @unique // Public token for /track/[token] — never expose caseId
+  manualPatientName   String?
+  manualPatientAge    Int?
+  manualPatientGender String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+
+  emsVitals           EMSVitals[]
+  hospitalResponses   HospitalResponse[]
+  policeReports       PoliceReport[]
+  ambulanceLocations  AmbulanceLocation[]
+  uploadedFiles       UploadedFile[]
+}
+
+model EMSVitals {
+  id                  String         @id @default(cuid())
+  caseId              String
+  accidentCase        AccidentCase   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  emsId               String
+  passengerId         String?        // ID of the passenger or "PRIMARY" or "MANUAL_X"
+  patientName         String?        // Name override for manual/co-passengers
+  bloodPressure       String?
+  pulseRate           Int?
+  oxygenLevel         Int?
+  temperature         Float?
+  respiratoryRate     Int?
+  bloodSugar          Int?
+  bleedingSeverity    String?
+  fractureDetails     String?
+  consciousnessStatus String?        // CONSCIOUS, SEMI_CONSCIOUS, UNCONSCIOUS
+  injuryObservations  String?
+  emergencyNotes      String?
+  triageScore         Int?           // AI NEWS2 triage score (0-20)
+  triageLevel         String?        // LOW, MEDIUM, HIGH, CRITICAL
+  triageConfidence    Float?         // AI confidence percentage
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+}
+
+model HospitalProfile {
+  id                    String             @id @default(cuid())
+  userId                String             @unique
+  user                  User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hospitalName          String
+  address               String
+  latitude              Float
+  longitude             Float
+  traumaCareAvailable   Boolean            @default(false)
+  icuBedsAvailable      Int                @default(0)
+  emergencyBedsAvailable Int               @default(0)
+  contactNumber         String
+  specialization        String?
+  status                String             @default("Available")
+  emergencySupportAvailable Boolean        @default(true)
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+}
+
+model HospitalResponse {
+  id               String       @id @default(cuid())
+  caseId           String
+  accidentCase     AccidentCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  hospitalId       String
+  status           String       // NOTIFIED, ACCEPTED, PREPARING, READY, ADMITTED, DECLINED
+  preparationNotes String?
+  doctorAssigned   String?
+  bedNumber        String?
+  videoRoomId      String?      // LiveKit room name — e.g. "ss-case-abc12345678"
+  videoStatus      String?      // IDLE | ACTIVE | ENDED
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
+
+model PoliceReport {
+  id                       String       @id @default(cuid())
+  caseId                   String
+  accidentCase             AccidentCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  officerId                String
+  firNumber                String?
+  accidentDescription      String?
+  accidentLocation         String?
+  vehicleVerificationStatus String?     // VERIFIED, UNVERIFIED, DISPUTED
+  legalNotes               String?
+  createdAt                DateTime     @default(now())
+  updatedAt                DateTime     @updatedAt
+}
+
+model Notification {
+  id              String   @id @default(cuid())
+  caseId          String?
+  recipientName   String
+  recipientPhone  String
+  type            String   // MOCK_SMS, IN_APP
+  message         String
+  trackingLink    String?
+  status          String   // CREATED, SENT, FAILED
+  recipientUserId String?
+  senderUserId    String?
+  senderRole      String?
+  recipientRole   String?
+  createdAt       DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  role      String?
+  action    String
+  entityType String
+  entityId  String?
+  ipAddress String?
+  details   String?
+  createdAt DateTime @default(now())
+}
+
+model AmbulanceLocation {
+  id        String   @id @default(cuid())
+  caseId    String
+  latitude  Float
+  longitude Float
+  timestamp DateTime @default(now())
+
+  accidentCase AccidentCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+}
+
+model UploadedFile {
+  id           String       @id @default(cuid())
+  caseId       String
+  uploadedById String
+  passengerId  String?
+  fileType     String
+  fileName     String?
+  mimeType     String?
+  dataUrl      String       // Base64
+  createdAt    DateTime     @default(now())
+
+  accidentCase AccidentCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  uploadedBy   User         @relation(fields: [uploadedById], references: [id])
+}
