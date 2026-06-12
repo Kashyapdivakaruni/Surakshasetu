@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
-    serverExternalPackages: ["livekit-server-sdk"]
+    serverComponentsExternalPackages: ["livekit-server-sdk"]
   }
 }
 
