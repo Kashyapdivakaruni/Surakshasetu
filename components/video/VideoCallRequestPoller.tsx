@@ -25,6 +25,7 @@ interface Notification {
   type: string;
   message: string;
   status: string;
+  senderUserId: string | null;
   senderRole: string | null;
   createdAt: string;
 }
@@ -50,10 +51,12 @@ export function VideoCallRequestPoller({
         const data = await res.json();
         if (!active) return;
 
-        // Find the first PENDING video call request targeted to us
+        // Find the first PENDING video call request targeted to us (sent by someone else)
         const pendingRequest = data.notifications?.find(
           (n: Notification) =>
-            n.type === "VIDEO_CALL_REQUEST" && n.status === "PENDING"
+            n.type === "VIDEO_CALL_REQUEST" &&
+            n.status === "PENDING" &&
+            n.senderUserId !== userId
         );
 
         if (pendingRequest) {

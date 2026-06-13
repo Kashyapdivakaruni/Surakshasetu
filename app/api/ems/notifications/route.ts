@@ -30,13 +30,14 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Retrieve global notifications and notifications targeted to this user or role
+    // Retrieve global notifications, notifications targeted to this user/role, and notifications sent by this user
     const notifications = await prisma.notification.findMany({
       where: {
         OR: [
           { recipientUserId: null, recipientRole: null }, // Global system alerts
           { recipientUserId: userId },                     // Direct target
           { recipientRole: role },                         // Role target
+          { senderUserId: userId },                        // Sent by current user (for polling status)
         ],
       },
       orderBy: { createdAt: "desc" },
