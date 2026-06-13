@@ -132,8 +132,92 @@ async function main() {
     },
   });
 
+  // 5. Hospital 1 (Primary)
+  const hospitalUser = await prisma.user.upsert({
+    where: { email: 'hospital@demo.com' },
+    update: {},
+    create: {
+      email: 'hospital@demo.com',
+      fullName: 'City General Hospital',
+      phone: '9112233445',
+      passwordHash,
+      role: 'HOSPITAL',
+      hospitalProfile: {
+        create: {
+          hospitalName: 'City General Hospital',
+          address: 'Road No. 2, Banjara Hills, Hyderabad',
+          latitude: 17.4165,
+          longitude: 78.4416,
+          traumaCareAvailable: true,
+          icuBedsAvailable: 15,
+          emergencyBedsAvailable: 8,
+          contactNumber: '+91 9112233445',
+          specialization: 'Trauma & Emergency Services',
+          status: 'Available',
+          emergencySupportAvailable: true,
+        }
+      }
+    }
+  });
+
+  // 6. Hospital 2 (Apollo)
+  await prisma.user.upsert({
+    where: { email: 'apollo@demo.com' },
+    update: {},
+    create: {
+      email: 'apollo@demo.com',
+      fullName: 'Apollo Hospital Jubilee Hills',
+      phone: '9885544332',
+      passwordHash,
+      role: 'HOSPITAL',
+      hospitalProfile: {
+        create: {
+          hospitalName: 'Apollo Hospital Jubilee Hills',
+          address: 'Jubilee Hills, Hyderabad, Telangana',
+          latitude: 17.4265,
+          longitude: 78.4116,
+          traumaCareAvailable: true,
+          icuBedsAvailable: 25,
+          emergencyBedsAvailable: 12,
+          contactNumber: '+91 9885544332',
+          specialization: 'Cardiology, Neurology & Trauma',
+          status: 'Available',
+          emergencySupportAvailable: true,
+        }
+      }
+    }
+  });
+
+  // 7. Hospital 3 (Care)
+  await prisma.user.upsert({
+    where: { email: 'care@demo.com' },
+    update: {},
+    create: {
+      email: 'care@demo.com',
+      fullName: 'Care Hospital Gachibowli',
+      phone: '9776655443',
+      passwordHash,
+      role: 'HOSPITAL',
+      hospitalProfile: {
+        create: {
+          hospitalName: 'Care Hospital Gachibowli',
+          address: 'Gachibowli, Hyderabad, Telangana',
+          latitude: 17.4325,
+          longitude: 78.3685,
+          traumaCareAvailable: false,
+          icuBedsAvailable: 10,
+          emergencyBedsAvailable: 5,
+          contactNumber: '+91 9776655443',
+          specialization: 'Orthopedics & General Medicine',
+          status: 'Available',
+          emergencySupportAvailable: true,
+        }
+      }
+    }
+  });
+
   console.log('Seed completed. Users created:');
-  console.log({ citizen: citizen.email, ems: ems.email, police: police.email });
+  console.log({ citizen: citizen.email, ems: ems.email, police: police.email, hospital: hospitalUser.email });
 }
 
 main()

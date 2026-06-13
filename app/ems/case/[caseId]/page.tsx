@@ -252,7 +252,7 @@ export default function EMSCasePage({ params }: { params: { caseId: string } }) 
           {/* Actions */}
           <div className="px-6 pb-6 flex flex-col gap-3">
             <Button 
-              onClick={() => window.open(smsData?.trackingUrl || `/track/${params.caseId}`, '_blank')}
+              onClick={() => window.open(smsData?.trackingUrl || `/track/${caseData?.trackingToken || params.caseId}`, '_blank')}
               className="w-full bg-[#0F284B] hover:bg-[#1A3A6B] text-white font-bold rounded-full h-12 shadow-lg"
             >
               <ExternalLink className="w-4 h-4 mr-2" /> Open Family Tracking Page
@@ -320,7 +320,7 @@ export default function EMSCasePage({ params }: { params: { caseId: string } }) 
                 roomExists={!!caseData.hospitalResponses?.[0]?.videoRoomId}
                 className="w-full md:w-auto bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-bold flex-1 md:flex-none"
               />
-              <Link href={`/track/${params.caseId}`} target="_blank" className="flex-1 md:flex-none">
+              <Link href={`/track/${caseData?.trackingToken || params.caseId}`} target="_blank" className="flex-1 md:flex-none">
                 <Button className="w-full bg-[#0F284B] hover:bg-[#1A3A6B] text-white rounded-full font-bold">
                   <Crosshair className="w-4 h-4 mr-2" /> Live Tracking
                 </Button>
@@ -628,8 +628,8 @@ export default function EMSCasePage({ params }: { params: { caseId: string } }) 
                         <MapPin className="w-4 h-4 text-slate-400" /> Tracking Link
                       </h3>
                       <div className="flex mt-3">
-                        <input type="text" readOnly value={`${typeof window !== 'undefined' ? window.location.origin : ''}/track/${params.caseId}`} className="text-xs bg-slate-50 border border-slate-200 p-2 rounded-l-md w-full outline-none" />
-                        <Button size="sm" className="rounded-l-none bg-blue-600" onClick={() => navigator.clipboard.writeText(`${window.location.origin}/track/${params.caseId}`)}>Copy</Button>
+                        <input type="text" readOnly value={`${typeof window !== 'undefined' ? window.location.origin : ''}/track/${caseData?.trackingToken || params.caseId}`} className="text-xs bg-slate-50 border border-slate-200 p-2 rounded-l-md w-full outline-none" />
+                        <Button size="sm" className="rounded-l-none bg-blue-600" onClick={() => navigator.clipboard.writeText(`${window.location.origin}/track/${caseData?.trackingToken || params.caseId}`)}>Copy</Button>
                       </div>
                     </div>
 

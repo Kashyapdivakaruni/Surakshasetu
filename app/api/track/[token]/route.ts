@@ -29,14 +29,15 @@ export async function GET(
   try {
     const { token } = params;
 
-    if (!token || token.length < 32) {
+    if (!token || token.length < 20) {
       return NextResponse.json(
         { error: "Invalid tracking token." },
         { status: 400 }
       );
     }
 
-    const accidentCase = await prisma.accidentCase.findUnique({
+    // Try looking up by trackingToken first
+    let accidentCase = await prisma.accidentCase.findUnique({
       where: { trackingToken: token },
       include: {
         hospitalResponses: {
@@ -45,6 +46,19 @@ export async function GET(
         },
       },
     });
+
+    // Fallback: look up by case ID (CUID)
+    if (!accidentCase) {
+      accidentCase = await prisma.accidentCase.findUnique({
+        where: { id: token },
+        include: {
+          hospitalResponses: {
+            orderBy: { createdAt: "desc" },
+            take: 1,
+          },
+        },
+      });
+    }
 
     if (!accidentCase) {
       return NextResponse.json(

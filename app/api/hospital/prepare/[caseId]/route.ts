@@ -104,9 +104,11 @@ export async function PATCH(
 
         const trackingUrl = buildTrackingUrl(trackingToken);
 
-        // Determine recipient phone — prefer citizen's registered phone
+        // Determine recipient phone — prioritize emergency contact
         const recipientPhone =
-          emergencyCase.citizen?.user?.phone ?? null;
+          emergencyCase.citizen?.emergencyContactPhone ??
+          emergencyCase.citizen?.user?.phone ??
+          null;
 
         if (recipientPhone) {
           const smsResult = await sendTrackingSms(
@@ -120,7 +122,9 @@ export async function PATCH(
             data: {
               caseId,
               recipientName:
-                emergencyCase.citizen?.user?.fullName ?? "Patient",
+                emergencyCase.citizen?.emergencyContactName ??
+                emergencyCase.citizen?.user?.fullName ??
+                "Emergency Contact",
               recipientPhone,
               type: "TRACKING_SMS",
               message: `Suraksha Setu Update: Your accident case has been registered successfully. Track status here: ${trackingUrl}`,

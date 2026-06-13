@@ -64,9 +64,15 @@ export async function POST(
 
     // ── Step 2: Resolve recipient phone (emergency contact or citizen) ───
     const citizenProfile = accidentCase.citizen;
-    const recipientPhone = citizenProfile?.user?.phone ?? null;
+    const recipientPhone =
+      citizenProfile?.emergencyContactPhone ??
+      citizenProfile?.user?.phone ??
+      null;
     const recipientName =
-      citizenProfile?.user?.fullName ?? accidentCase.manualPatientName ?? "Patient";
+      citizenProfile?.emergencyContactName ??
+      citizenProfile?.user?.fullName ??
+      accidentCase.manualPatientName ??
+      "Emergency Contact";
 
     if (!recipientPhone) {
       console.warn(`[SMS] No phone number found for case ${caseId}. SMS skipped.`);
